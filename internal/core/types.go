@@ -32,3 +32,12 @@ type OutboundMessage struct {
 	Text      string
 	SessionID string
 }
+
+type CompletionRequest struct {
+	System   string
+	Messages []Message
+}
+
+type CompletionResponse struct {
+	Text string
+}
