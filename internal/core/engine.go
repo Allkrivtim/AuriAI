@@ -33,6 +33,12 @@ func (e *engine) Handle(ctx context.Context, inmessage InboundMessage) (Outbound
 		return OutboundMessage{}, err
 	}
 
-	//Return responce
+	//Store AI response
+	err = e.store.AppendMessage(ctx, inmessage.SessionID, Message{Role: RoleAssistant, Text: resp.Text})
+	if err != nil {
+		return OutboundMessage{}, err
+	}
+
+	//Return response
 	return OutboundMessage{resp.Text, inmessage.SessionID}, nil
 }
