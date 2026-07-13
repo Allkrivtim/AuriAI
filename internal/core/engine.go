@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"time"
 )
 
 type engine struct {
@@ -14,7 +15,7 @@ func NewEngine(llm LLM, store Store) Engine {
 }
 
 func (e *engine) Handle(ctx context.Context, inmessage InboundMessage) (OutboundMessage, error) {
-	message := Message{Role: RoleUser, Text: inmessage.Text}
+	message := Message{Role: RoleUser, Text: inmessage.Text, CreatedAt: time.Now()}
 	//Store message
 	err := e.store.AppendMessage(ctx, inmessage.SessionID, message)
 	if err != nil {
@@ -34,7 +35,7 @@ func (e *engine) Handle(ctx context.Context, inmessage InboundMessage) (Outbound
 	}
 
 	//Store AI response
-	err = e.store.AppendMessage(ctx, inmessage.SessionID, Message{Role: RoleAssistant, Text: resp.Text})
+	err = e.store.AppendMessage(ctx, inmessage.SessionID, Message{Role: RoleAssistant, Text: resp.Text, CreatedAt: time.Now()})
 	if err != nil {
 		return OutboundMessage{}, err
 	}

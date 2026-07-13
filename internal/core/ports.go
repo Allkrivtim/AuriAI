@@ -15,4 +15,5 @@ type LLM interface {
 type Store interface {
 	AppendMessage(ctx context.Context, sessionID string, m Message) error
 	History(ctx context.Context, sessionID string, limit int) ([]Message, error)
+	Close() error
 }
