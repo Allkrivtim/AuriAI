@@ -1,7 +1,7 @@
-package openrouter
+package openai
 
 import (
-	"AssistantAI/internal/core"
+	"AuriAI/internal/core"
 	"context"
 	"errors"
 
@@ -11,10 +11,10 @@ import (
 
 // NewClient создаёт LLM-провайдер поверх OpenRouter (Chat Completions API).
 // apiKey и model приходят снаружи (из main/env) — адаптер сам в окружение не лезет.
-func NewClient(apiKey string, model string) *Client {
+func NewClient(apiKey string, model string, url string) *Client {
 	return &Client{
 		api: openai.NewClient(
-			option.WithBaseURL("https://openrouter.ai/api/v1"),
+			option.WithBaseURL(url),
 			option.WithAPIKey(apiKey),
 		),
 		model: model,
@@ -53,7 +53,7 @@ func (c *Client) Complete(ctx context.Context, request core.CompletionRequest) (
 		return core.CompletionResponse{}, err
 	}
 	if len(completion.Choices) == 0 {
-		return core.CompletionResponse{}, errors.New("openrouter: empty response, no choices")
+		return core.CompletionResponse{}, errors.New("openai: empty response, no choices")
 	}
 
 	return core.CompletionResponse{Text: completion.Choices[0].Message.Content}, nil

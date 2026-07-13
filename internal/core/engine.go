@@ -6,12 +6,13 @@ import (
 )
 
 type engine struct {
-	llm   LLM
-	store Store
+	llm        LLM
+	store      Store
+	basePrompt string
 }
 
-func NewEngine(llm LLM, store Store) Engine {
-	return &engine{llm: llm, store: store}
+func NewEngine(llm LLM, store Store, basePrompt string) Engine {
+	return &engine{llm: llm, store: store, basePrompt: basePrompt}
 }
 
 func (e *engine) Handle(ctx context.Context, inmessage InboundMessage) (OutboundMessage, error) {
@@ -29,7 +30,7 @@ func (e *engine) Handle(ctx context.Context, inmessage InboundMessage) (Outbound
 	}
 
 	//Create response to LLM provider
-	resp, err := e.llm.Complete(ctx, CompletionRequest{System: "", Messages: history})
+	resp, err := e.llm.Complete(ctx, CompletionRequest{System: e.basePrompt, Messages: history})
 	if err != nil {
 		return OutboundMessage{}, err
 	}

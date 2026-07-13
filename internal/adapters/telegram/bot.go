@@ -1,8 +1,8 @@
 package telegram
 
 import (
-	"AssistantAI/internal/adapters/telegram/handlers"
-	"AssistantAI/internal/core"
+	"AuriAI/internal/adapters/telegram/handlers"
+	"AuriAI/internal/core"
 	"log"
 
 	tb "github.com/go-telegram-bot-api/telegram-bot-api/v5"

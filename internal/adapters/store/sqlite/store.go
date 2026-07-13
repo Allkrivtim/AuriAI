@@ -1,7 +1,7 @@
 package sqlite
 
 import (
-	"AssistantAI/internal/core"
+	"AuriAI/internal/core"
 	"context"
 	"database/sql"
 

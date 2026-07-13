@@ -1,4 +1,4 @@
-module AssistantAI
+module AuriAI
 
 go 1.26
 
