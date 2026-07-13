@@ -17,3 +17,14 @@ type Store interface {
 	History(ctx context.Context, sessionID string, limit int) ([]Message, error)
 	Close() error
 }
+
+type Tool interface {
+	Spec() ToolSpec
+	Invoke(ctx context.Context, args string) (string, error)
+}
+
+type ToolRegistry interface {
+	Register(t Tool)
+	Get(name string) (Tool, bool)
+	Specs() []ToolSpec
+}

@@ -17,9 +17,11 @@ type Session struct {
 }
 
 type Message struct {
-	Role      Role
-	Text      string
-	CreatedAt time.Time
+	Role       Role
+	Text       string
+	CreatedAt  time.Time
+	ToolCalls  []ToolCall
+	ToolCallID string
 }
 
 type InboundMessage struct {
@@ -36,8 +38,22 @@ type OutboundMessage struct {
 type CompletionRequest struct {
 	System   string
 	Messages []Message
+	Tools    []ToolSpec
 }
 
 type CompletionResponse struct {
-	Text string
+	Text      string
+	ToolCalls []ToolCall
+}
+
+type ToolSpec struct {
+	Name        string
+	Description string
+	Parameters  map[string]any
+}
+
+type ToolCall struct {
+	ID   string
+	Name string
+	Args string
 }
