@@ -4,6 +4,7 @@ import (
 	"AuriAI/internal/core"
 	"context"
 	"database/sql"
+	"encoding/json"
 
 	_ "embed"
 
@@ -40,7 +41,15 @@ func (s *Store) Close() error {
 }
 
 func (s *Store) AppendMessage(ctx context.Context, SessionID string, m core.Message) error {
-	_, err := s.dot.Exec(s.db, "append-message", SessionID, string(m.Role), m.Text, m.CreatedAt)
+	var toolCalls any // nil → SQLite запишет NULL
+	if len(m.ToolCalls) > 0 {
+		b, err := json.Marshal(m.ToolCalls)
+		if err != nil {
+			return err
+		}
+		toolCalls = string(b)
+	}
+	_, err := s.dot.Exec(s.db, "append-message", SessionID, string(m.Role), m.Text, m.CreatedAt, toolCalls, m.ToolCallID)
 	return err
 }
 
@@ -53,13 +62,24 @@ func (s *Store) History(ctx context.Context, sessionID string, limit int) ([]cor
 
 	var msgs []core.Message
 	for rows.Next() {
-		var m core.Message
-		var r string
-		if err := rows.Scan(&r, &m.Text, &m.CreatedAt); err != nil {
+		var message core.Message
+		var role string
+		var toolCallsJSON sql.NullString
+		var toolCallID sql.NullString
+		if err := rows.Scan(&role, &message.Text, &message.CreatedAt, &toolCallsJSON, &toolCallID); err != nil {
 			return nil, err
 		}
-		m.Role = core.Role(r)
-		msgs = append(msgs, m)
+		message.Role = core.Role(role)
+		if toolCallsJSON.Valid && toolCallsJSON.String != "" {
+			if err := json.Unmarshal([]byte(toolCallsJSON.String), &message.ToolCalls); err != nil {
+				return nil, err
+			}
+		}
+		if toolCallID.Valid {
+			message.ToolCallID = toolCallID.String
+		}
+
+		msgs = append(msgs, message)
 	}
 	return msgs, rows.Err()
 }

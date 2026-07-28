@@ -4,6 +4,7 @@ import (
 	"AuriAI/internal/adapters/llm/openai"
 	"AuriAI/internal/adapters/store/sqlite"
 	"AuriAI/internal/adapters/telegram"
+	"AuriAI/internal/adapters/tools/websearch"
 	"AuriAI/internal/core"
 	"os"
 
@@ -25,7 +26,9 @@ func main() {
 	}
 	basePrompt := string(b)
 
-	engine := core.NewEngine(llm, store, basePrompt)
+	toolRegistry := core.NewRegistry()
+	toolRegistry.Register(websearch.NewTool(os.Getenv("SEARCH_PROVIDER_API_KEY")))
+	engine := core.NewEngine(llm, store, basePrompt, toolRegistry)
 
 	telegram.InitTgBot(engine, os.Getenv("TG_BOT_TOKEN"))
 }

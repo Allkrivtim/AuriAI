@@ -38,39 +38,43 @@ func (e *engine) Handle(ctx context.Context, inmessage InboundMessage) (Outbound
 			return OutboundMessage{}, err
 		}
 
-		if len(resp.ToolCalls) == 0 {
+		if len(resp.ToolCalls) == 0 { // <- если toolcalls нету, просто сохраняем сообщение и возвращаем OutboundMessage. Но кто у нас использует Handle()? Он сам должен получить OutboundMessage и сделать LLM.Complete()? Не совсем понятно.
 			//Store AI response
 			err = e.store.AppendMessage(ctx, inmessage.SessionID, Message{Role: RoleAssistant, Text: resp.Text, CreatedAt: time.Now()})
 			if err != nil {
 				return OutboundMessage{}, err
 			}
 			return OutboundMessage{resp.Text, inmessage.SessionID}, nil
-		} else {
-			err = e.store.AppendMessage(ctx, inmessage.SessionID, Message{
-				Role:      RoleAssistant,
-				Text:      resp.Text,      // может быть пустым — норм
-				ToolCalls: resp.ToolCalls, // ← вот они
-				CreatedAt: time.Now(),
-			})
-			if err != nil {
-				return OutboundMessage{}, err
-			}
-			var result string
-			for _, call := range resp.ToolCalls {
-				tool, ok := e.tools.Get(call.Name)
-				if !ok {
-					result = "error: unknown tool " + call.Name
-					continue
-				}
-				out, err := tool.Invoke(ctx, call.Args)
+		} // <- если вызов тулзы есть, (тут кстати непонятно, LLM может вызвать только одну тулзу или несколько за сообщение?) мы сохраняем сообщение а затем <|читай ниже|>.
+		err = e.store.AppendMessage(ctx, inmessage.SessionID, Message{
+			Role:      RoleAssistant,
+			Text:      resp.Text,      // может быть пустым — норм
+			ToolCalls: resp.ToolCalls, // ← вот они
+			CreatedAt: time.Now(),
+		})
+		if err != nil {
+			return OutboundMessage{}, err
+		}
+		for _, call := range resp.ToolCalls { //парсим все вызовы
+			var result string                  // сохраняем переменную для результата тулзы, да?
+			tool, ok := e.tools.Get(call.Name) //вызываем??? не совсем понятно здесь. не, мы получаем имя тулзы, да? не совсем понятно тут.
+			if !ok {                           // если ok не true(не совсем понятно, что такое ok. Типо, подтверждение вызова тулзы или подтверждение сущестования тулзы?), возвращаем в result строку
+				result = "Error: unknown tool " + call.Name
+			} else {
+				output, err := tool.Invoke(ctx, call.Args) // а здесь мы уже вызываем тулзу, да? есть контекст и аргументы. а где мы аргументы парсим?
 				if err != nil {
-					result = "error: " + err.Error()
+					result = "Error: " + err.Error()
+				} else {
+					result = output
 				}
-				result = out
+			}
+			err = e.store.AppendMessage(ctx, inmessage.SessionID, Message{Role: RoleTool, Text: result, CreatedAt: time.Now(), ToolCallID: call.ID}) //ну и добавляем вызов тулзы в историю, не совсем понятно откуда брать ToolCallID
+			if err != nil {
+				return OutboundMessage{Text: "Error", SessionID: inmessage.SessionID}, err
 			}
 		}
 	}
 
 	//Return response
-	return OutboundMessage{resp.Text, inmessage.SessionID}, nil
+	return OutboundMessage{Text: resp.Text, SessionID: inmessage.SessionID}, nil
 }
