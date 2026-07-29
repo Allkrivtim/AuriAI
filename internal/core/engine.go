@@ -33,7 +33,7 @@ func (e *engine) Handle(ctx context.Context, inmessage InboundMessage) (Outbound
 		}
 
 		//Create response to LLM provider
-		resp, err = e.llm.Complete(ctx, CompletionRequest{System: e.basePrompt, Messages: history, Tools: e.tools.Specs()})
+		resp, err = e.llm.Complete(ctx, CompletionRequest{System: e.systemPrompt(), Messages: history, Tools: e.tools.Specs()})
 		if err != nil {
 			return OutboundMessage{}, err
 		}
@@ -77,4 +77,11 @@ func (e *engine) Handle(ctx context.Context, inmessage InboundMessage) (Outbound
 
 	//Return response
 	return OutboundMessage{Text: resp.Text, SessionID: inmessage.SessionID}, nil
+}
+
+func (e *engine) systemPrompt() string {
+	sysPrompt := e.basePrompt
+	sysPrompt = sysPrompt + "\n\n - Время: " + time.Now().Format("Monday, 2 January 2006, 15:04")
+	//sysPrompt = sysPrompt + "\n\n - Заметки"
+	return sysPrompt
 }

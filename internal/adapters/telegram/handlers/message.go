@@ -54,7 +54,7 @@ func HandleMessage(bot *tb.BotAPI, msg *tb.Message, engine core.Engine) {
 		log.Printf("[telegram] error sending typing action to chat %d: %v", msg.Chat.ID, err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
 	defer cancel()
 
 	out, err := engine.Handle(ctx, core.InboundMessage{SessionID: sessionID, Provider: "telegram", Text: msg.Text})
