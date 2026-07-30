@@ -1,4 +1,4 @@
-package memory
+package notes
 
 import "AuriAI/internal/core"
 

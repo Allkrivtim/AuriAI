@@ -1,7 +1,8 @@
-package memory
+package notes
 
 import (
 	"AuriAI/internal/core"
+	"AuriAI/internal/utils"
 	"context"
 	"encoding/json"
 	"time"
@@ -19,10 +20,11 @@ func (t *Tool) Spec() core.ToolSpec {
 					"enum":        []string{"save", "get", "delete"}, // ← ограничили варианты
 					"description": "What to do: save a new note, get all, or delete one",
 				},
-				"name":         map[string]any{"type": "string", "description": "Note name/key"},
+				"name":         map[string]any{"type": "string", "description": "Note name(unique)/key"},
 				"text":         map[string]any{"type": "string", "description": "Note content (for save)"},
-				"expire_at":    map[string]any{"type": "string", "description": "Note time to live in minutes/key"},
-				"notification": map[string]any{"type": "string", "description": "Note notification is enabled/key"},
+				"expire_at":    map[string]any{"type": "int", "description": "Note time to live in minutes. Set -1 too /key"},
+				"notification": map[string]any{"type": "bool", "description": "Note notification is enabled(notification will wake assistant when note expire.)/key"},
+				"pin":          map[string]any{"type": "bool", "description": "Note pin if pinned, will displayed in system prompt(use only for important notes!)"},
 			},
 			"required": []string{"action"},
 		},
@@ -34,8 +36,9 @@ func (t *Tool) Invoke(ctx context.Context, args string) (string, error) {
 		Action       string `json:"action"`
 		Name         string `json:"name"`
 		Text         string `json:"text"`
-		ExpireAt     uint   `json:"expire_at"`
-		Notification uint   `json:"notification"`
+		ExpireIn     int    `json:"expire_at"`
+		Notification bool   `json:"notification"`
+		Pin          bool   `json:"pin"`
 	}
 	if err := json.Unmarshal([]byte(args), &input); err != nil {
 		return "", err
@@ -47,7 +50,7 @@ func (t *Tool) Invoke(ctx context.Context, args string) (string, error) {
 		if input.Name == "" || input.Text == "" {
 			return "Error: 'name' and 'text' are required for save.", nil
 		}
-		err := t.store.AppendNote(ctx, core.Note{Name: input.Name, Text: input.Text, ExpireIn: 1, Notification: input.Notification, CreatedAt: time.Now()})
+		err := t.store.AppendNote(ctx, core.Note{Name: input.Name, Text: input.Text, ExpireIn: input.ExpireIn, Notification: uint(utils.BoolToInt(input.Notification)), Pin: uint(utils.BoolToInt(input.Pin)), CreatedAt: time.Now()})
 		if err != nil {
 			return "", err
 		}

@@ -53,7 +53,7 @@ func (s *Store) AppendMessage(ctx context.Context, SessionID string, m core.Mess
 }
 
 func (s *Store) AppendMemory(ctx context.Context, m core.Memory) error {
-	_, err := s.dot.ExecContext(ctx, s.db, m.Name, m.Text, m.CreatedAt)
+	_, err := s.dot.ExecContext(ctx, s.db, "append-memory", m.Name, m.Text, m.CreatedAt)
 	return err
 }
 
@@ -61,7 +61,7 @@ func (s *Store) AppendNote(ctx context.Context, n core.Note) error {
 	if n.Notification > 1 {
 		n.Notification = 1
 	}
-	_, err := s.dot.ExecContext(ctx, s.db, "append-note", n.Name, n.Text, n.CreatedAt, n.ExpireIn, n.Notification)
+	_, err := s.dot.ExecContext(ctx, s.db, "append-note", n.Name, n.Text, n.CreatedAt, n.ExpireIn, n.Notification, n.Pin)
 	return err
 }
 
@@ -124,7 +124,7 @@ func (s *Store) Notes(ctx context.Context) ([]core.Note, error) {
 	var notes []core.Note
 	for rows.Next() {
 		var note core.Note
-		if err := rows.Scan(&note.Name, &note.Text, &note.CreatedAt, &note.ExpireIn, &note.Notification); err != nil {
+		if err := rows.Scan(&note.Name, &note.Text, &note.CreatedAt, &note.ExpireIn, &note.Notification, &note.Pin); err != nil {
 			return nil, err
 		}
 		if note.Notification > 1 {
@@ -139,11 +139,11 @@ var _ core.MemoryStore = (*Store)(nil)
 var _ core.Store = (*Store)(nil)
 
 func (s *Store) DeleteMemory(ctx context.Context, m core.Memory) error {
-	_, err := s.dot.ExecContext(ctx, s.db, m.Name)
+	_, err := s.dot.ExecContext(ctx, s.db, "delete-memory", m.Name)
 	return err
 }
 
 func (s *Store) DeleteNote(ctx context.Context, n core.Note) error {
-	_, err := s.dot.ExecContext(ctx, s.db, "append-note", n.Name)
+	_, err := s.dot.ExecContext(ctx, s.db, "delete-note", n.Name)
 	return err
 }

@@ -3,7 +3,7 @@ INSERT INTO messages (session_id, role, text, created_at, tool_calls, tool_call_
 VALUES (?, ?, ?, ?, ?, ?);
 
 -- name: append-memory
-INSERT INTO memories (name, text, created_at)
+INSERT OR REPLACE INTO memories (name, text, created_at)
 VALUES (?, ?, ?);
 
 -- name: append-note
@@ -21,8 +21,8 @@ SELECT name, text, created_at
 FROM memories ORDER BY created_at ASC;
 
 -- name: notes
-SELECT name, text, created_at, expire_in, notification
-FROM memories ORDER BY created_at ASC;
+SELECT name, text, created_at, expire_in, notification, pin
+FROM notes ORDER BY created_at ASC;
 
 -- name: delete-memory
 DELETE FROM memories WHERE name = ?;

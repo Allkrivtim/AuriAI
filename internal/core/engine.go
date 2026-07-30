@@ -6,10 +6,11 @@ import (
 )
 
 type engine struct {
-	llm        LLM
-	store      Store
-	basePrompt string
-	tools      ToolRegistry
+	llm         LLM
+	store       Store
+	memoryStore MemoryStore
+	basePrompt  string
+	tools       ToolRegistry
 }
 
 func NewEngine(llm LLM, store Store, basePrompt string, tools ToolRegistry) Engine {
@@ -45,23 +46,23 @@ func (e *engine) Handle(ctx context.Context, inputMessage InboundMessage) (Outbo
 				return OutboundMessage{}, err
 			}
 			return OutboundMessage{resp.Text, inputMessage.SessionID}, nil
-		} // <- если вызов тулзы есть, (тут кстати непонятно, LLM может вызвать только одну тулзу или несколько за сообщение?) мы сохраняем сообщение а затем <|читай ниже|>.
+		}
 		err = e.store.AppendMessage(ctx, inputMessage.SessionID, Message{
 			Role:      RoleAssistant,
-			Text:      resp.Text,      // может быть пустым — норм
-			ToolCalls: resp.ToolCalls, // ← вот они
+			Text:      resp.Text,
+			ToolCalls: resp.ToolCalls,
 			CreatedAt: time.Now(),
 		})
 		if err != nil {
 			return OutboundMessage{}, err
 		}
-		for _, call := range resp.ToolCalls { //парсим все вызовы
-			var result string                  // сохраняем переменную для результата тулзы, да?
-			tool, ok := e.tools.Get(call.Name) //вызываем??? не совсем понятно здесь. не, мы получаем имя тулзы, да? не совсем понятно тут.
-			if !ok {                           // если ok не true(не совсем понятно, что такое ok. Типо, подтверждение вызова тулзы или подтверждение сущестования тулзы?), возвращаем в result строку
+		for _, call := range resp.ToolCalls {
+			var result string
+			tool, ok := e.tools.Get(call.Name)
+			if !ok {
 				result = "Error: unknown tool " + call.Name
 			} else {
-				output, err := tool.Invoke(ctx, call.Args) // а здесь мы уже вызываем тулзу, да? есть контекст и аргументы. а где мы аргументы парсим?
+				output, err := tool.Invoke(ctx, call.Args)
 				if err != nil {
 					result = "Error: " + err.Error()
 				} else {
@@ -82,6 +83,16 @@ func (e *engine) Handle(ctx context.Context, inputMessage InboundMessage) (Outbo
 func (e *engine) systemPrompt() string {
 	sysPrompt := e.basePrompt
 	sysPrompt = sysPrompt + "\n\n - Время: " + time.Now().Format("Monday, 2 January 2006, 15:04")
-	//sysPrompt = sysPrompt + "\n\n - Заметки"
+
+	notesRaw, err := e.memoryStore.Notes(context.Background())
+	if err != nil {
+		return sysPrompt + "Не удалось обработать заметки."
+	}
+	var notes string
+	for _, note := range notesRaw {
+		text := "\n\n   - " + note.Name + ":" + note.Text
+		notes = notes + text
+	}
+	sysPrompt = sysPrompt + "\n\n - Заметки:" + string(notes)
 	return sysPrompt
 }

@@ -69,5 +69,6 @@ type Note struct {
 	Text         string
 	ExpireIn     int
 	Notification uint
+	Pin          uint
 	CreatedAt    time.Time
 }

@@ -18,8 +18,9 @@ CREATE TABLE IF NOT EXISTS notes (
     name TEXT NOT NULL UNIQUE,
     text       TEXT    NOT NULL,
     created_at   TIMESTAMP NOT NULL,
-    expire_in TEXT,
-    notification INTEGER DEFAULT 0
+    expire_in INTEGER,
+    notification INTEGER DEFAULT 0 CHECK (notification IN (0, 1)),
+    pin INTEGER DEFAULT 0 CHECK (pin IN (0, 1))
 );
 
 CREATE INDEX IF NOT EXISTS idx_messages_session
