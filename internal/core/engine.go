@@ -90,6 +90,9 @@ func (e *engine) systemPrompt() string {
 	}
 	var notes string
 	for _, note := range notesRaw {
+		if note.Pin == 0 {
+			continue
+		}
 		text := "\n\n   - " + note.Name + ":" + note.Text
 		notes = notes + text
 	}
