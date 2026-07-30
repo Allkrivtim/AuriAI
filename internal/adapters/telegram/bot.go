@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"syscall"
 
 	tb "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -64,7 +65,8 @@ func handleUpdate(bot *tb.BotAPI, update tb.Update, engine core.Engine) {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Printf("[telegram] recovered panic while handling chat %d: %v", msg.Chat.ID, r)
+				log.Printf("[telegram] recovered panic while handling chat %d: %v\n%s",
+					msg.Chat.ID, r, debug.Stack()) // ← debug.Stack() даёт трейс
 			}
 		}()
 		handlers.HandleMessage(bot, msg, engine)

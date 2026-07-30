@@ -33,7 +33,7 @@ func main() {
 	toolRegistry.Register(memory.NewTool(store))
 	toolRegistry.Register(notes.NewTool(store))
 
-	engine := core.NewEngine(llm, store, basePrompt, toolRegistry)
+	engine := core.NewEngine(llm, store, store, basePrompt, toolRegistry)
 
 	telegram.InitTgBot(engine, os.Getenv("TG_BOT_TOKEN"))
 }

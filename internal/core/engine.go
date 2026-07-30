@@ -13,8 +13,8 @@ type engine struct {
 	tools       ToolRegistry
 }
 
-func NewEngine(llm LLM, store Store, basePrompt string, tools ToolRegistry) Engine {
-	return &engine{llm: llm, store: store, basePrompt: basePrompt, tools: tools}
+func NewEngine(llm LLM, store Store, memoryStore MemoryStore, basePrompt string, tools ToolRegistry) Engine {
+	return &engine{llm: llm, store: store, memoryStore: memoryStore, basePrompt: basePrompt, tools: tools}
 }
 
 func (e *engine) Handle(ctx context.Context, inputMessage InboundMessage) (OutboundMessage, error) {

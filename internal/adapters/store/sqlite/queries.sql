@@ -7,8 +7,8 @@ INSERT OR REPLACE INTO memories (name, text, created_at)
 VALUES (?, ?, ?);
 
 -- name: append-note
-INSERT INTO notes (name, text, created_at, expire_in, notification)
-VALUES (?, ?, ?, ?, ?);
+INSERT INTO notes (name, text, created_at, expire_in, notification, pin)
+VALUES (?, ?, ?, ?, ?, ?);
 
 -- name: history
 SELECT role, text, created_at, tool_calls, tool_call_id
