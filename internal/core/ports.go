@@ -28,3 +28,12 @@ type ToolRegistry interface {
 	Get(name string) (Tool, bool)
 	Specs() []ToolSpec
 }
+
+type MemoryStore interface {
+	AppendMemory(ctx context.Context, memory Memory) error
+	Memories(ctx context.Context) ([]Memory, error)
+	DeleteMemory(ctx context.Context, memory Memory) error
+	AppendNote(ctx context.Context, note Note) error
+	Notes(ctx context.Context) ([]Note, error)
+	DeleteNote(ctx context.Context, note Note) error
+}

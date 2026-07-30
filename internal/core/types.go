@@ -57,3 +57,17 @@ type ToolCall struct {
 	Name string
 	Args string
 }
+
+type Memory struct {
+	Name      string
+	Text      string
+	CreatedAt time.Time
+}
+
+type Note struct {
+	Name         string
+	Text         string
+	ExpireIn     int
+	Notification uint
+	CreatedAt    time.Time
+}

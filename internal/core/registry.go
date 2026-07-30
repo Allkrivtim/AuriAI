@@ -5,7 +5,8 @@ type registry struct {
 }
 
 func NewRegistry() ToolRegistry {
-	return &registry{tools: make(map[string]Tool)}
+	reg := registry{tools: make(map[string]Tool)}
+	return &reg
 }
 
 func (r *registry) Register(t Tool) {

@@ -4,9 +4,8 @@ import (
 	"AuriAI/internal/core"
 	"context"
 	"database/sql"
-	"encoding/json"
-
 	_ "embed"
+	"encoding/json"
 
 	"github.com/qustavo/dotsql"
 	_ "modernc.org/sqlite"
@@ -49,12 +48,25 @@ func (s *Store) AppendMessage(ctx context.Context, SessionID string, m core.Mess
 		}
 		toolCalls = string(b)
 	}
-	_, err := s.dot.Exec(s.db, "append-message", SessionID, string(m.Role), m.Text, m.CreatedAt, toolCalls, m.ToolCallID)
+	_, err := s.dot.ExecContext(ctx, s.db, "append-message", SessionID, string(m.Role), m.Text, m.CreatedAt, toolCalls, m.ToolCallID)
+	return err
+}
+
+func (s *Store) AppendMemory(ctx context.Context, m core.Memory) error {
+	_, err := s.dot.ExecContext(ctx, s.db, m.Name, m.Text, m.CreatedAt)
+	return err
+}
+
+func (s *Store) AppendNote(ctx context.Context, n core.Note) error {
+	if n.Notification > 1 {
+		n.Notification = 1
+	}
+	_, err := s.dot.ExecContext(ctx, s.db, "append-note", n.Name, n.Text, n.CreatedAt, n.ExpireIn, n.Notification)
 	return err
 }
 
 func (s *Store) History(ctx context.Context, sessionID string, limit int) ([]core.Message, error) {
-	rows, err := s.dot.Query(s.db, "history", sessionID, limit)
+	rows, err := s.dot.QueryContext(ctx, s.db, "history", sessionID, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -84,4 +96,54 @@ func (s *Store) History(ctx context.Context, sessionID string, limit int) ([]cor
 	return msgs, rows.Err()
 }
 
+func (s *Store) Memories(ctx context.Context) ([]core.Memory, error) {
+	rows, err := s.dot.QueryContext(ctx, s.db, "memories")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var memories []core.Memory
+	for rows.Next() {
+		var memory core.Memory
+		if err := rows.Scan(&memory.Name, &memory.Text, &memory.CreatedAt); err != nil {
+			return nil, err
+		}
+		memories = append(memories, memory)
+	}
+	return memories, rows.Err()
+}
+
+func (s *Store) Notes(ctx context.Context) ([]core.Note, error) {
+	rows, err := s.dot.QueryContext(ctx, s.db, "notes")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var notes []core.Note
+	for rows.Next() {
+		var note core.Note
+		if err := rows.Scan(&note.Name, &note.Text, &note.CreatedAt, &note.ExpireIn, &note.Notification); err != nil {
+			return nil, err
+		}
+		if note.Notification > 1 {
+			note.Notification = 1
+		}
+		notes = append(notes, note)
+	}
+	return notes, rows.Err()
+}
+
+var _ core.MemoryStore = (*Store)(nil)
 var _ core.Store = (*Store)(nil)
+
+func (s *Store) DeleteMemory(ctx context.Context, m core.Memory) error {
+	_, err := s.dot.ExecContext(ctx, s.db, m.Name)
+	return err
+}
+
+func (s *Store) DeleteNote(ctx context.Context, n core.Note) error {
+	_, err := s.dot.ExecContext(ctx, s.db, "append-note", n.Name)
+	return err
+}
