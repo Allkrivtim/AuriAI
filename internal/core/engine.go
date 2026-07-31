@@ -93,7 +93,7 @@ func (e *engine) systemPrompt() string {
 		if note.Pin == 0 {
 			continue
 		}
-		text := "\n\n   - " + note.Name + ":" + note.Text
+		text := "\n   - " + note.Name + ":" + note.Text
 		notes = notes + text
 	}
 	sysPrompt = sysPrompt + "\n\n - Заметки:" + string(notes)
