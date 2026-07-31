@@ -1,0 +1,10 @@
+services:
+  agent:
+    container_name: auriai
+    build:
+      dockerfile: Dockerfile
+    env_file: .env
+    restart: unless-stopped
+    volumes:
+      - ./storage:/server/storage
+      - ./prompts:/server/prompts

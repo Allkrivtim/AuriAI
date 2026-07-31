@@ -9,20 +9,18 @@ import (
 	"AuriAI/internal/adapters/tools/websearch"
 	"AuriAI/internal/core"
 	"os"
-
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		panic("No .env file")
-	}
+	//if err := godotenv.Load(); err != nil {
+	//	panic("No .env file")
+	//}
 	llm := openai.NewClient(os.Getenv("LLM_API_KEY"), os.Getenv("LLM_MODEL"), os.Getenv("LLM_URL"))
 	store, err := sqlite.NewStore("storage/core.sqlite")
 	if err != nil {
 		panic(err)
 	}
-	b, err := os.ReadFile("internal/prompts/base.md")
+	b, err := os.ReadFile("prompts/base.md")
 	if err != nil {
 		panic(err)
 	}
